@@ -1,4 +1,5 @@
 using GuniKitchenWebApp.Data;
+using GuniKitchenWebApp.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -27,12 +28,50 @@ namespace GuniKitchenWebApp
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<ApplicationDbContext>(options =>
+            services
+                .AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
-            services.AddDatabaseDeveloperPageExceptionFilter();
-            services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddEntityFrameworkStores<ApplicationDbContext>();
+
+
+            services
+                .AddDatabaseDeveloperPageExceptionFilter();
+
+
+            //services
+            //    .AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+            //    .AddEntityFrameworkStores<ApplicationDbContext>();
+
+            services
+                .AddIdentity<MyIdentityUser, MyIdentityRole>(options =>
+                {
+                    //Sign-in Policy
+                    options.SignIn.RequireConfirmedAccount = true;
+
+                    //Password Policy
+                    options.Password.RequireUppercase = true;
+                    options.Password.RequireLowercase = true;
+                    options.Password.RequireDigit = true;
+                    options.Password.RequireNonAlphanumeric = true;
+                    options.Password.RequiredLength = 8;
+
+                    //User Policy
+                    options.User.RequireUniqueEmail = true;
+                })
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
+
+            //Configure the Identity Application level cookie
+            services
+                .ConfigureApplicationCookie(options =>
+                {
+                    options.LoginPath = "/Identity/Account/Login";
+                    options.LogoutPath = "/Identity/Account/Logout";
+                    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+                    options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
+                    options.SlidingExpiration = true;
+                });
+
             services.AddRazorPages();
         }
 
